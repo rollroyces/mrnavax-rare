@@ -1,0 +1,14 @@
+# mrnavax-rare — mRNA therapeutics design toolkit for rare Mendelian diseases.
+
+Copyright (c) 2026 Royce Lam.
+
+Dual-licensed under the AGPL-3.0-or-later open-source license (see
+LICENSE-AGPL) or a commercial license available on request. Open an issue on
+the GitHub repository at https://github.com/rollroyces/mrnavax-rare for
+commercial-license inquiries.
+
+This package depends on `mrnavax`, which is itself dual-licensed (AGPL-3.0-or-
+later / commercial). Downstream open-source use that loads `mrnavax` via
+import or spawns an in-process pipeline is bound by the AGPL terms of both
+projects. Commercial use of either package, or any closed-source derivative,
+requires a commercial license — contact as above.

@@ -1,0 +1,43 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg
+*.egg-info/
+.eggs/
+build/
+dist/
+.venv/
+venv/
+env/
+.venv-boltz/
+.venv-boltz311/
+.mamba-envs/
+
+# Test / coverage
+.pytest_cache/
+.coverage
+htmlcov/
+.ruff_cache/
+.mypy_cache/
+pytestdebug.log
+warmup-logs/
+
+# IDE
+.idea/
+.vscode/
+.DS_Store
+
+# Project artifacts
+outputs/
+results/
+*.alphagenome_key
+.alphagenome_key
+*.boltz-cache/
+.tdc-cache/
+
+# Distribution
+*.whl
+*.tar.gz
+
+# Hypothesis
+.hypothesis/
