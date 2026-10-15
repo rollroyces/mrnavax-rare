@@ -1,9 +1,29 @@
-"""mrnavax_rare.aav — AAV vector design subsystem (v0.10).
+"""``mrnavax_rare.aav`` — AAV vector design subsystem (v0.10.1).
 
 This subsystem composes an AAV gene-therapy vector design — capsid + ITR-
 flanked transgene cassette — for a target gene + optional HGVS-C variant.
 It is the v0.10 deliverable and is the sibling subsystem to
 ``mrnavax_rare.design`` (which handles LNP-mRNA constructs).
+
+v0.10.1 changes (validated against published wet-lab programs; see
+``paper/AAV_WET_LAB_VALIDATION.md``):
+
+- **Minigene support** — :attr:`AAVSpec.minigene` selects a published
+  truncation strategy (e.g. ``"CFTRΔR(708–835)"`` for the 4D-710 /
+  SP-101 CF program).
+- **Codon optimization** — :attr:`AAVSpec.codon_optimized` (bool) wires
+  the cassette through ``mrnavax.codon_lineardesign.optimize_lineardesign``.
+- **Split-intein delivery** — :attr:`AAVSpec.split_intein` (2-tuple)
+  emits a two-cassette payload (N-half + C-half) for very large genes
+  like SCN1A (Mich 2025 *Sci Transl Med* 17:eadn5603).
+- **Cell-type enhancer** — :attr:`AAVSpec.cell_type_enhancer` records
+  a GABAergic / excitatory / pan-neuronal tag; a safety note is added
+  when a pan-neuronal enhancer is paired with a known cell-type-
+  critical gene (e.g. SCN1A).
+- **AAV-PHP.eB** — added to :data:`AAV_CAPSIDS` as the first
+  non-wildtype capsid.
+- **Proprietary capsid support** — ``MockAAVVectorDesigner`` recognizes
+  ``"4D-A101"`` and ``"AAV2.5T"`` and emits a caveat note.
 
 Public surface::
 
@@ -12,18 +32,13 @@ Public surface::
         AAVSpec,
         AAVVectorDesigner,
         AAV_CAPSIDS,
+        AAV_CELL_TYPE_ENHANCERS,
+        AAV_MINIGENE_CDS_LENGTH_BP,
+        AAV_PHP_EB,
         AAV_PROMOTERS,
         AAV_PACKAGING_CEILING_BP,
         capsid_for_tissue,
     )
-
-Adapter selection mirrors the rest of ``mrnavax-rare``:
-
-- ``"auto"`` (default) → ``"mock"`` (stdlib-only rule-based; v0.10 default).
-- ``"mock"`` → :class:`~mrnavax_rare.aav.adapters.mock_aav.MockAAVVectorDesigner`
-  (always available).
-- ``"live"`` → :class:`~mrnavax_rare.aav.adapters.live_aav.LiveAAVVectorDesigner`
-  (stub; raises :class:`NotImplementedError`).
 """
 
 from __future__ import annotations
@@ -35,12 +50,17 @@ from .data_types import (
     AAVRH10,
     AAV_CAPSIDS,
     AAV_CAPSID_TROPISM,
+    AAV_CELL_TYPE_CRITICAL_GENES,
+    AAV_CELL_TYPE_ENHANCERS,
+    AAV_MINIGENE_CDS_LENGTH_BP,
     AAV_PACKAGING_BORDERLINE_MARGIN_BP,
     AAV_PACKAGING_CEILING_BP,
+    AAV_PHP_EB,
     AAV_PROMOTERS,
     AAVSpec,
     PackagingStatus,
     capsid_for_tissue,
+    resolve_minigene_cds_length,
 )
 from .protocol import AAVVectorDesigner
 
@@ -51,14 +71,19 @@ __all__ = [
     "AAVRH10",
     "AAV_CAPSIDS",
     "AAV_CAPSID_TROPISM",
+    "AAV_CELL_TYPE_CRITICAL_GENES",
+    "AAV_CELL_TYPE_ENHANCERS",
+    "AAV_MINIGENE_CDS_LENGTH_BP",
     "AAV_PACKAGING_BORDERLINE_MARGIN_BP",
     "AAV_PACKAGING_CEILING_BP",
+    "AAV_PHP_EB",
     "AAV_PROMOTERS",
     "AAVSpec",
     "AAVVectorDesigner",
     "PackagingStatus",
     "capsid_for_tissue",
     "design_aav",
+    "resolve_minigene_cds_length",
 ]
 
 
@@ -69,36 +94,27 @@ def design_aav(
     capsid: str = "auto",
     promoter: str = "auto",
     tissue: str = "",
+    minigene: str = "",
+    codon_optimized: bool = False,
+    split_intein: tuple[str, str] | None = None,
+    cell_type_enhancer: str = "",
     backend: str = "auto",
 ) -> AAVSpec:
     """Design an AAV vector for ``target_gene`` on the chosen capsid.
 
-    Parameters
-    ----------
-    target_gene:
-        Gene symbol (e.g. ``"CFTR"``, ``"OTC"``).
-    cds_wildtype:
-        Wildtype CDS DNA string (A/C/G/T).
-    hgvs_c:
-        Optional HGVS-C variant (e.g. ``"c.1624G>T"``). Empty string means
-        "deliver wildtype CDS".
-    capsid:
-        One of :data:`AAV_CAPSIDS`, or ``"auto"`` (default) to pick from
-        ``tissue`` via :func:`capsid_for_tissue`.
-    promoter:
-        One of :data:`AAV_PROMOTERS`, or ``"auto"`` (default) to pick
-        ``"CAG"`` for non-CNS / non-SCN1A and ``"hSyn"`` for CNS / SCN1A.
-    tissue:
-        Free-text tissue token (e.g. ``"lung"``, ``"liver"``, ``"cns"``).
-        Used only when ``capsid == "auto"`` (and informs promoter when
-        ``promoter == "auto"``).
-    backend:
-        ``"auto"`` (default), ``"mock"``, or ``"live"``.
+    v0.10.1 adds four optional parameters:
 
-    Returns
-    -------
-    AAVSpec
-        The composed AAV vector design spec.
+    - ``minigene`` — select a published minigene truncation
+      (e.g. ``"CFTRΔR(708–835)"``).
+    - ``codon_optimized`` — wire the CDS through
+      ``mrnavax.codon_lineardesign.optimize_lineardesign`` if the
+      backend is available.
+    - ``split_intein`` — emit a two-cassette payload for very large
+      genes (Mich 2025 strategy).
+    - ``cell_type_enhancer`` — record a cell-type specific enhancer
+      (e.g. ``"hDLXI5/6i"`` for GABAergic interneurons); pan-neuronal
+      enhancers paired with cell-type-critical genes trigger a
+      safety note.
     """
     if backend == "auto":
         backend = "mock"
@@ -112,6 +128,10 @@ def design_aav(
             capsid=capsid,
             promoter=promoter,
             tissue=tissue,
+            minigene=minigene,
+            codon_optimized=codon_optimized,
+            split_intein=split_intein,
+            cell_type_enhancer=cell_type_enhancer,
         )
     if backend == "live":
         from .adapters.live_aav import LiveAAVVectorDesigner
