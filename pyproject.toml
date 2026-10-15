@@ -4,8 +4,8 @@ build-backend = "hatchling.build"
 
 [project]
 name = "mrnavax-rare"
-version = "0.10.0"
-description = "mRNA therapeutics design toolkit for rare Mendelian diseases — extension of mrnavax. Codon + UTR + LNP + indication-aware protein-replacement design, AAV gene-therapy vector design (v0.10)."
+version = "0.10.1"
+description = "mRNA therapeutics design toolkit for rare Mendelian diseases — extension of mrnavax. Codon + UTR + LNP + indication-aware protein-replacement design, AAV gene-therapy vector design (v0.10), wet-lab validated minigene + split-intein + cell-type-enhancer support (v0.10.1)."
 readme = "README.md"
 requires-python = ">=3.11"
 license = { text = "AGPL-3.0-or-later OR LicenseRef-Commercial" }
@@ -15,6 +15,7 @@ authors = [
 keywords = [
     "aidd", "mrna-therapeutics", "rare-diseases", "protein-replacement",
     "mendelian-disease", "alphagenome", "alphamissense", "boltz", "aav",
+    "aav-gene-therapy", "split-intein", "cftr", "scn1a", "dravet",
 ]
 classifiers = [
     "Development Status :: 3 - Alpha",

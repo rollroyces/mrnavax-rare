@@ -17,7 +17,7 @@ from mrnavax_rare import SUBSYSTEMS
 
 def test_version_is_string():
     assert isinstance(mrnavax_rare.__version__, str)
-    assert mrnavax_rare.__version__ == "0.10.0"
+    assert mrnavax_rare.__version__ == "0.10.1"
 
 
 def test_get_version_matches_dunder():
@@ -32,9 +32,8 @@ def test_subsystems_declared():
     assert "safety" in status["subsystems_declared"]
     assert "design" in status["subsystems_declared"]
     assert "trial" in status["subsystems_declared"]
-    # v0.6: cfRNA persistence classifier added as a 7th subsystem.
     assert "cfrna_persistence_classifier" in status["subsystems_declared"]
-    assert status["is_skeleton"] is False  # v0.5 milestone shipped
+    assert status["is_skeleton"] is False
     assert SUBSYSTEMS == (
         "indication",
         "target_protein",
@@ -50,7 +49,7 @@ def test_subsystems_declared():
 
 def test_backends_registry_is_a_list():
     assert isinstance(CHECKS, list)
-    assert len(CHECKS) >= 1  # the self-check is always registered
+    assert len(CHECKS) >= 1
 
 
 def test_check_all_runs():
@@ -76,12 +75,7 @@ def test_skeleton_self_check_passes():
 
 
 def test_subsystem_list_is_consistent_v05():
-    """All 6 (v0.5) + 1 (v0.6) subsystems declared and implemented.
-
-    Locks in the v0.5 milestone (6 subsystems) and the v0.6 addition
-    (``cfrna_persistence_classifier``). When this test fails, a
-    subsystem was declared but not implemented (or vice versa).
-    """
+    """All 6 (v0.5) + 1 (v0.6) subsystems declared and implemented."""
     from mrnavax_rare import SUBSYSTEMS, skeleton_status
 
     declared = set(SUBSYSTEMS)
@@ -89,7 +83,6 @@ def test_subsystem_list_is_consistent_v05():
     assert declared == implemented, (
         f"declared/declared mismatch: declared={declared}, implemented={implemented}"
     )
-    # All six expected in v0.5, plus the v0.6 cfRNA classifier.
     expected_v05 = (
         "indication",
         "target_protein",
@@ -100,30 +93,15 @@ def test_subsystem_list_is_consistent_v05():
     )
     for s in expected_v05:
         assert s in declared, f"{s} missing from SUBSYSTEMS"
-    # v0.6 addition.
-    assert "cfrna_persistence_classifier" in declared, (
-        "v0.6: cfrna_persistence_classifier missing from SUBSYSTEMS"
-    )
-    assert "cfrna_persistence_classifier" in implemented, (
-        "v0.6: cfrna_persistence_classifier missing from subsystems_implemented"
-    )
+    assert "cfrna_persistence_classifier" in declared
+    assert "cfrna_persistence_classifier" in implemented
     # v0.10 addition.
-    assert "aav" in declared, (
-        "v0.10: aav missing from SUBSYSTEMS"
-    )
-    assert "aav" in implemented, (
-        "v0.10: aav missing from subsystems_implemented"
-    )
+    assert "aav" in declared
+    assert "aav" in implemented
 
 
 def test_skeleton_status_flipped_to_false():
-    """v0.5 milestone: is_skeleton flips to False when all 6 shipped.
-
-    v0.7.4 update: the version assertion is updated to the current milestone
-    state (8 subsystems, 2 biomarkers appended). The is_skeleton check still
-    locks in the v0.5 milestone's structural flip.
-    v0.10.0 update: 9 subsystems shipped (aav added).
-    """
+    """v0.5 milestone: is_skeleton flips to False when all 6 shipped."""
     s = mrnavax_rare.skeleton_status()
-    assert s["is_skeleton"] is False, "skeleton_status should be False at v0.10.0"
-    assert s["version"] == "0.10.0"
+    assert s["is_skeleton"] is False, "skeleton_status should be False at v0.10.1"
+    assert s["version"] == "0.10.1"

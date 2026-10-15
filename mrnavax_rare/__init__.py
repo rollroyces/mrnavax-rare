@@ -4,14 +4,16 @@ A sibling of mrnavax (https://github.com/rollroyces/mrnavax) that focuses the
 same eight-layer mRNA-therapeutics pipeline on rare genetic diseases rather
 than cancer vaccines.
 
-This package reached the **v0.10.0 milestone** on 2026-10-14: 9 subsystems
+This package reached the **v0.10.1 milestone** on 2026-10-15: 9 subsystems
 (`indication`, `target_protein`, `modality`, `safety`, `design`, `aav`,
 `trial`, `cfrna_persistence_classifier`, `sweat_chloride_predictor`)
-shipped with mock + live adapters, 256 + 1 tests, 7 substantive studies
+shipped with mock + live adapters, 279 + 1 tests, 7 substantive studies
 (CF Class I, PCCA, Pareto-sweep, sweat_chloride, cfRNA, Phase 1 trial
 design, Dravet SCN1A) + 1 replication study, paper draft at ~6,000 words,
 two real-data-integration passes that reduced the verification queue from
-22 to 11 net active anchors.
+22 to 11 net active anchors, and a wet-lab validation sweep against
+4D-710 / SP-101 / DLX2.0-SCN1A / VX-522 published programs (see
+`paper/AAV_WET_LAB_VALIDATION.md`).
 
 Public surface:
 
@@ -33,22 +35,9 @@ Backend-adapter convention mirrors mrnavax:
 
 from __future__ import annotations
 
-__version__ = "0.10.0"
+__version__ = "0.10.1"
 __all__ = ["__version__"]
 
-# All 6 base subsystems declared. Two biomarker predictors (cfRNA persistence,
-# sweat chloride) appended under the safety subsystem. Trial was added in
-# the parallel v0.5 push; we re-ordered to put trial last to align with the
-# SCOPE §7 roadmap.
-# v0.6 append: cfrna_persistence_classifier — a cfRNA-derived plasma-
-# persistence predictor sitting under the safety subsystem (see
-# mrnavax_rare/safety/cfrna/).
-# v0.7 append: sweat_chloride_predictor — a sweat chloride CFTR-function
-# biomarker predictor also under the safety subsystem (see
-# mrnavax_rare/safety/sweat_chloride/).
-# v0.10 append: aav — AAV gene-therapy vector design (capsid + ITR-flanked
-# transgene cassette), sibling to the LNP-mRNA ``design`` subsystem. Uses
-# ``design.variant_injector.apply_hgvs_c`` for non-PTC variant payloads.
 SUBSYSTEMS = (
     "indication",
     "target_protein",
@@ -69,17 +58,6 @@ def get_version() -> str:
 
 def skeleton_status() -> dict:
     """Return the current skeleton status as a dict."""
-    # v0.9.0 milestone: 8 subsystems shipped; 2 base subsystems expanded
-    # to 8 total with the two biomarker predictors under safety.
-    # v0.9.0 additional milestone: trial-corpus extension beyond CF
-    # (DEFAULT_CORPUS = 9 entries: 5 CF + 2 PCCA/OTC Moderna mRNA-IV
-    # + 2 Dravet Stoke STK-001 / zorevunersen) so the trial matcher
-    # returns informative non-CF top-1 for the v0.6 PCCA, v0.7.3 Dravet,
-    # and v0.7.2 Phase-1 trial-design cohorts.
-    # v0.10.0 milestone: aav subsystem added — AAV gene-therapy vector
-    # design (capsid + ITR-flanked transgene cassette), sibling to the
-    # LNP-mRNA ``design`` pipeline. Uses ``design.variant_injector`` for
-    # non-PTC variant payloads. Mock backend only; live backend stub.
     implemented = [
         "indication",
         "target_protein",
